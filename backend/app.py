@@ -43,15 +43,13 @@ UPLOAD_DIR = BASE_DIR / "uploads"
 FRONTEND_DIR = BASE_DIR / "frontend"
 UPLOAD_DIR.mkdir(exist_ok=True)
 
-# --- config ---
-_SKILL_DIR = Path("/app/skills/image-skill")
-import importlib.util
-_spec = importlib.util.spec_from_file_location("imgskill_common", _SKILL_DIR / "common.py")
-_img_common = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(_img_common)
-get_api_key = _img_common.get_api_key
-get_api_base = _img_common.get_api_base
-build_headers = _img_common.build_headers
+# --- config (from env) ---
+def get_api_key():
+    return os.environ.get("IMAGE_API_KEY", "")
+def get_api_base():
+    return os.environ.get("IMAGE_API_BASE", "https://hk-intra-paas.transsion.com/tranai-proxy/v1")
+def build_headers():
+    return {"Authorization": f"Bearer {get_api_key()}", "Content-Type": "application/json"}
 
 # In-memory sessions
 sessions: dict = {}
