@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Image Topic Platform</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f0f0f; color: #e0e0e0; min-height: 100vh; }
+.container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+
+header { display: flex; align-items: center; justify-content: space-between; padding: 20px 0; border-bottom: 1px solid #222; margin-bottom: 30px; }
+header h1 { font-size: 22px; font-weight: 600; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+header .session-info { font-size: 12px; color: #555; }
+
+/* Upload */
+.upload-zone { border: 2px dashed #2a2a2a; border-radius: 16px; padding: 60px 40px; text-align: center; cursor: pointer; transition: all 0.3s; background: #151515; }
+.upload-zone:hover, .upload-zone.dragover { border-color: #667eea; background: #1a1a2e; }
+.upload-zone svg { width: 48px; height: 48px; fill: #444; margin-bottom: 16px; }
+.upload-zone h2 { font-size: 17px; font-weight: 500; margin-bottom: 8px; color: #999; }
+.upload-zone p { font-size: 12px; color: #555; }
+.upload-zone input { display: none; }
+
+.preview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 6px; margin: 16px 0; }
+.preview-grid img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 6px; border: 1px solid #222; }
+
+/* Buttons */
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; border: none; border-radius: 8px; font-size: 13px; cursor: pointer; transition: all 0.2s; font-weight: 500; }
+.btn-primary { background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; }
+.btn-primary:hover { opacity: 0.9; }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-success { background: #2d6a4f; color: #fff; }
+.btn-success:hover { opacity: 0.9; }
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+
+/* Steps */
+.step-indicator { display: flex; gap: 0; margin: 20px 0; }
+.step { flex: 1; text-align: center; padding: 10px; font-size: 13px; color: #555; border-bottom: 2px solid #222; }
+.step.active { color: #667eea; border-bottom-color: #667eea; }
+.step.done { color: #2d6a4f; border-bottom-color: #2d6a4f; }
+
+/* Topic cards */
+.topics-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin: 20px 0; }
+.topic-card { background: #151515; border-radius: 12px; overflow: hidden; border: 2px solid transparent; transition: all 0.2s; cursor: pointer; user-select: none; }
+.topic-card:hover { border-color: #333; }
+.topic-card.selected { border-color: #667eea; background: #1a1a2e; }
+.topic-card .check { position: absolute; top: 10px; right: 10px; width: 24px; height: 24px; border-radius: 50%; border: 2px solid #444; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+.topic-card.selected .check { border-color: #667eea; background: #667eea; }
+.topic-card.selected .check::after { content: '✓'; color: #fff; font-size: 14px; }
+
+.topic-thumb { width: 100%; aspect-ratio: 4/3; object-fit: cover; background: #1a1a2e; }
+.topic-thumb-placeholder { width: 100%; aspect-ratio: 4/3; background: linear-gradient(135deg, #1a1a2e, #16213e); display: flex; align-items: center; justify-content: center; font-size: 36px; }
+
+.topic-info { padding: 14px; position: relative; }
+.topic-info h3 { font-size: 15px; margin-bottom: 3px; }
+.topic-info .tagline { font-size: 11px; color: #555; margin-bottom: 10px; }
+.topic-colors { display: flex; gap: 4px; margin-bottom: 8px; }
+.topic-colors span { width: 14px; height: 14px; border-radius: 50%; border: 1px solid #333; }
+.topic-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px; }
+.topic-tags span { background: #1e1e1e; padding: 2px 7px; border-radius: 3px; font-size: 10px; color: #888; }
+
+/* Banner result */
+.topic-banner-img { width: 100%; aspect-ratio: 984/390; object-fit: cover; border-radius: 8px; margin-top: 10px; }
+.topic-images-preview { display: grid; grid-template-columns: repeat(auto-fill, minmax(50px, 1fr)); gap: 4px; margin-top: 10px; }
+.topic-images-preview img { width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 4px; }
+
+/* Progress */
+.progress-bar { height: 4px; background: #1a1a1a; border-radius: 2px; margin: 16px 0; overflow: hidden; }
+.progress-bar .fill { height: 100%; background: linear-gradient(90deg, #667eea, #764ba2); transition: width 0.5s; }
+.progress-text { font-size: 12px; color: #555; }
+
+.spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.section-label { font-size: 15px; font-weight: 500; margin: 24px 0 12px; color: #888; }
+.text-muted { color: #555; font-size: 12px; }
+
+/* Confirm bar */
+.confirm-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #1a1a1a; border-top: 1px solid #2a2a2a; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; z-index: 100; }
+.confirm-bar .info { font-size: 13px; color: #999; }
+.confirm-bar .actions { display: flex; gap: 10px; }
+
+body { padding-bottom: 70px; }
+
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>🎨 Image Topic Platform</h1>
+    <div class="session-info" id="sessionInfo"></div>
+  </header>
+
+  <!-- Step 1: Upload -->
+  <div id="step1">
+    <div class="step-indicator">
+      <div class="step active">① Upload</div>
+      <div class="step">② Analyze</div>
+      <div class="step">③ Select Topics</div>
+      <div class="step">④ Generate Banners</div>
+    </div>
+    <div class="upload-zone" id="dropZone">
+      <svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
+      <h2>Drop images here or click to upload</h2>
+      <p>JPG, PNG, WebP, GIF — up to 100 images</p>
+      <input type="file" id="fileInput" multiple accept="image/*">
+    </div>
+    <div id="previewWrap"></div>
+    <div style="text-align:center; margin-top:16px" id="step1Actions"></div>
+  </div>
+
+  <!-- Step 2: Analyze (progress) -->
+  <div id="step2" class="hidden">
+    <div class="step-indicator">
+      <div class="step done">① Upload</div>
+      <div class="step active">② Analyze</div>
+      <div class="step">③ Select Topics</div>
+      <div class="step">④ Generate Banners</div>
+    </div>
+    <div class="progress-text" id="progressText">Analyzing images...</div>
+    <div class="progress-bar"><div class="fill" id="progressFill" style="width:0%"></div></div>
+  </div>
+
+  <!-- Step 3: Select Topics -->
+  <div id="step3" class="hidden">
+    <div class="step-indicator">
+      <div class="step done">① Upload</div>
+      <div class="step done">② Analyze</div>
+      <div class="step active">③ Select Topics</div>
+      <div class="step">④ Generate Banners</div>
+    </div>
+    <p class="text-muted">Select topics you want to generate banners for (click cards to toggle):</p>
+    <div class="topics-grid" id="topicsGrid"></div>
+  </div>
+
+  <!-- Step 4: Results -->
+  <div id="step4" class="hidden">
+    <div class="step-indicator">
+      <div class="step done">① Upload</div>
+      <div class="step done">② Analyze</div>
+      <div class="step done">③ Select Topics</div>
+      <div class="step active">④ Generate Banners</div>
+    </div>
+    <div id="bannerResults"></div>
+  </div>
+</div>
+
+<script>
+const API = location.origin;
+let sessionId = '', allTopics = [], topicImages = [];
+
+// Init
+async function init() {
+  const res = await fetch(API + '/api/session', {method:'POST', headers:{'Content-Type':'application/json'}, body:'{"user_name":"User"}'});
+  const d = await res.json();
+  sessionId = d.session_id;
+  document.getElementById('sessionInfo').textContent = 'Session: ' + sessionId;
+}
+init();
+
+// Upload
+const dz = document.getElementById('dropZone'), fi = document.getElementById('fileInput');
+dz.onclick = () => fi.click();
+dz.ondragover = e => { e.preventDefault(); dz.classList.add('dragover'); };
+dz.ondragleave = () => dz.classList.remove('dragover');
+dz.ondrop = e => { e.preventDefault(); dz.classList.remove('dragover'); doUpload(e.dataTransfer.files); };
+fi.onchange = () => doUpload(fi.files);
+
+async function doUpload(files) {
+  const imgs = Array.from(files).filter(f => f.type.startsWith('image/'));
+  if (!imgs.length) return;
+
+  const pw = document.getElementById('previewWrap');
+  pw.innerHTML = '<div class="preview-grid">' + imgs.map(f => {
+    const url = URL.createObjectURL(f);
+    return `<img src="${url}">`;
+  }).join('') + '</div>';
+
+  const fd = new FormData();
+  imgs.forEach(f => fd.append('files', f));
+  await fetch(API + `/api/${sessionId}/upload`, {method:'POST', body:fd});
+
+  document.getElementById('step1Actions').innerHTML =
+    `<button class="btn btn-primary" onclick="startAnalyze()">🔍 Analyze ${imgs.length} Images</button>`;
+}
+
+async function startAnalyze() {
+  document.getElementById('step1').classList.add('hidden');
+  document.getElementById('step2').classList.remove('hidden');
+  document.getElementById('progressFill').style.width = '10%';
+  document.getElementById('progressText').textContent = 'Analyzing with AI vision model...';
+
+  try {
+    const res = await fetch(API + `/api/${sessionId}/analyze`, {method:'POST'});
+    const d = await res.json();
+    document.getElementById('progressFill').style.width = '100%';
+    document.getElementById('progressText').textContent = `Found ${d.topics.length} topics from ${d.total} images`;
+
+    allTopics = d.topics;
+
+    // Load images for topic preview
+    const imgRes = await fetch(API + `/api/${sessionId}/images`);
+    const imgData = await imgRes.json();
+    topicImages = imgData.images;
+
+    setTimeout(showTopics, 500);
+  } catch(e) {
+    document.getElementById('progressText').textContent = 'Error: ' + e.message;
+  }
+}
+
+function showTopics() {
+  document.getElementById('step2').classList.add('hidden');
+  document.getElementById('step3').classList.remove('hidden');
+
+  const emojis = {nature:'🌿',city:'🏙️',portrait:'👤',food:'🍽️',animal:'🐾',architecture:'🏛️',interior:'🛋️',abstract:'🎨',other:'📷'};
+  const grid = document.getElementById('topicsGrid');
+  grid.innerHTML = '';
+
+  allTopics.forEach((t, i) => {
+    const em = emojis[t.name.toLowerCase()] || '📷';
+    const colors = t.colors.map(c => `<span style="background:${c}"></span>`).join('');
+    const tags = t.top_tags.map(tg => `<span>${tg}</span>`).join('');
+    const thumb = t.image_indices.length > 0
+      ? `<img class="topic-thumb" src="${API}${topicImages[t.image_indices[0]]?.url || ''}">`
+      : `<div class="topic-thumb-placeholder">${em}</div>`;
+
+    const card = document.createElement('div');
+    card.className = 'topic-card';
+    card.onclick = () => card.classList.toggle('selected');
+    card.dataset.name = t.name;
+    card.innerHTML = `
+      <div class="check"></div>
+      ${thumb}
+      <div class="topic-info">
+        <h3>${t.name}</h3>
+        <div class="tagline">${t.tagline}</div>
+        <div class="topic-colors">${colors}</div>
+        <div class="topic-tags">${tags}</div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+
+  // Confirm bar
+  const bar = document.createElement('div');
+  bar.className = 'confirm-bar';
+  bar.id = 'confirmBar';
+  bar.innerHTML = `
+    <div class="info"><span id="selCount">0</span> topics selected</div>
+    <div class="actions">
+      <button class="btn btn-sm" style="background:#222;color:#999" onclick="selectAll()">Select All</button>
+      <button class="btn btn-primary" id="confirmBtn" disabled onclick="confirmAndGenerate()">🎨 Generate Banners</button>
+    </div>
+  `;
+  document.body.appendChild(bar);
+
+  // Update count on click
+  grid.addEventListener('click', () => {
+    const sel = grid.querySelectorAll('.topic-card.selected').length;
+    document.getElementById('selCount').textContent = sel;
+    document.getElementById('confirmBtn').disabled = sel === 0;
+  });
+}
+
+function selectAll() {
+  document.querySelectorAll('.topic-card').forEach(c => c.classList.add('selected'));
+  document.getElementById('selCount').textContent = document.querySelectorAll('.topic-card.selected').length;
+  document.getElementById('confirmBtn').disabled = false;
+}
+
+async function confirmAndGenerate() {
+  const selected = [...document.querySelectorAll('.topic-card.selected')].map(c => c.dataset.name);
+  if (!selected.length) return;
+
+  document.getElementById('step3').classList.add('hidden');
+  document.getElementById('step4').classList.remove('hidden');
+  if (document.getElementById('confirmBar')) document.getElementById('confirmBar').remove();
+
+  const results = document.getElementById('bannerResults');
+  results.innerHTML = '<div class="progress-text">Generating banners for ' + selected.length + ' topics...</div><div class="progress-bar"><div class="fill" style="width:10%"></div></div>';
+
+  const res = await fetch(API + `/api/${sessionId}/confirm-topics`, {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({confirmed_topics: selected})
+  });
+  const d = await res.json();
+
+  results.innerHTML = '';
+  d.results.forEach(r => {
+    const topic = allTopics.find(t => t.name === r.name);
+    if (r.banner) {
+      const em = {nature:'🌿',city:'🏙️',portrait:'👤',food:'🍽️',animal:'🐾',architecture:'🏛️',interior:'🛋️',abstract:'🎨',other:'📷'}[r.name.toLowerCase()] || '📷';
+      let card = `<div style="background:#151515;border-radius:12px;padding:16px;margin-bottom:16px;border:1px solid #222">
+        <h3 style="font-size:15px;margin-bottom:4px">${em} ${r.name}</h3>
+        <p class="text-muted" style="margin-bottom:12px">${topic?.tagline || ''}</p>
+        <img class="topic-banner-img" src="${r.banner.remote_url || r.banner.url}">
+        <div class="topic-images-preview">`;
+      (topic?.image_indices || []).forEach(i => {
+        if (topicImages[i]) card += `<img src="${API}${topicImages[i].url}">`;
+      });
+      card += `</div></div>`;
+      results.innerHTML += card;
+    } else {
+      results.innerHTML += `<div style="background:#151515;border-radius:12px;padding:16px;margin-bottom:16px;border:1px solid #331">
+        <h3 style="font-size:15px;color:#f66">${r.name}</h3>
+        <p class="text-muted">Failed: ${r.error}</p>
+      </div>`;
+    }
+  });
+}
+</script>
+</body>
+</html>
