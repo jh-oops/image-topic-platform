@@ -206,7 +206,8 @@ async def upload_images(sid: str, files: list[UploadFile] = File(...)):
         if not f.content_type or not f.content_type.startswith("image/"): continue
         ext = Path(f.filename or "img").suffix or ".jpg"; fn = f"{uuid.uuid4().hex[:8]}{ext}"
         (d / fn).write_bytes(await f.read())
-        s["images"].append({"filename": f.filename, "id": fn}); uploaded.append(fn)
+        fpath = str(d / fn)
+        s["images"].append({"filename": f.filename, "id": fn, "path": fpath}); uploaded.append(fn)
     return {"uploaded": len(uploaded), "total": len(s["images"])}
 
 @app.get("/api/{sid}/images")
