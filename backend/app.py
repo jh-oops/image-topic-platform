@@ -43,11 +43,30 @@ UPLOAD_DIR = BASE_DIR / "uploads"
 FRONTEND_DIR = BASE_DIR / "frontend"
 UPLOAD_DIR.mkdir(exist_ok=True)
 
-# --- config (from env) ---
+# --- API config ---
+# Default key for Railway deployment (env var IMAGE_API_KEY overrides this)
+_DEFAULT_API_KEY = "sk_75f4620b0cc2fac71b3e04398f37431c5364dfeac030b6c42f915f6"
+
 def get_api_key():
-    return os.environ.get("IMAGE_API_KEY", "")
+    # Priority: 1) env var 2) default key 3) OpenClaw config (local only)
+    key = os.environ.get("IMAGE_API_KEY", "").strip()
+    if key: return key
+    if _DEFAULT_API_KEY: return _DEFAULT_API_KEY
+    # Local fallback: try OpenClaw config
+    for path in [Path.home() / ".openclaw" / "openclaw.json",
+                 Path("/home/node/.openclaw/agents/main/agent/models.json")]:
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+            for name in ("enterprise-llm", "TranAI"):
+                k = str((((data.get("models") or {}).get("providers") or {}).get(name) or {}).get("apiKey") or "").strip()
+                if k: return k
+        except Exception: pass
+    return ""
+
 def get_api_base():
-    return os.environ.get("IMAGE_API_BASE", "https://hk-intra-paas.transsion.com/tranai-proxy/v1")
+    base = os.environ.get("IMAGE_API_BASE", "").strip()
+    if base: return base
+    return "https://hk-intra-paas.transsion.com/tranai-proxy/v1"
 def build_headers():
     return {"Authorization": f"Bearer {get_api_key()}", "Content-Type": "application/json"}
 
